@@ -11,12 +11,11 @@ func (s *server) HandleShowOrder(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	info, err := s.cache.Get(id)
 	if err != nil {
-		http.Error(w, "gache.Get error", http.StatusInternalServerError)
-		log.Fatal(err)
+		http.Error(w, "cache.Get error: "+err.Error(), http.StatusInternalServerError)
 	}
 	jsonView, jsonErr := json.Marshal(info)
 	if jsonErr != nil {
-		http.Error(w, "Serialize error", http.StatusInternalServerError)
+		log.Fatal(jsonErr)
 	}
 	fmt.Fprint(w, string(jsonView))
 }
