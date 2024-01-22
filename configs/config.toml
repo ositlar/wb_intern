@@ -1,0 +1,2 @@
+bind_addr = ":8080"
+database_url = "host=localhost dbname=wb_intern_1 user=dev1 password=1a2s3d4f5g sslmode=disable"
