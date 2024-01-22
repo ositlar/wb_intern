@@ -60,9 +60,15 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *server) startListentStanServer() {
 	time.Sleep(time.Millisecond * 10)
 	_, err := s.sc.Subscribe("orderDemonstrationServer", func(m *stan.Msg) {
+		// o, isValid := s.ReadDataWithValidation(string(m.Data))
+		// if isValid {
+		// 	fmt.Printf("[%s]Recieved a message: %s\n", string(time.Now().Format("2006-01-02 15:04:05")), o.Id)
+		// 	s.cache.Set(o.Id, o.Info)
+		// }
 		o := s.ReadData(string(m.Data))
 		fmt.Printf("[%s]Recieved a message: %s\n", string(time.Now().Format("2006-01-02 15:04:05")), o.Id)
 		s.cache.Set(o.Id, o.Info)
+
 	}, stan.DeliverAllAvailable(), stan.DurableName(""), stan.StartWithLastReceived())
 	if err != nil {
 		log.Fatal(err)
@@ -72,6 +78,24 @@ func (s *server) startListentStanServer() {
 }
 
 // Parsing string data into model.DatabaseData
+func (s *server) ReadDataWithValidation(data string) (*model.DatabaseData, bool) {
+	fmt.Println(data)
+	jsonData := make(map[string]interface{})
+	err := json.Unmarshal([]byte(data), &jsonData)
+	if err != nil {
+		log.Fatal(err)
+		return nil, false
+	}
+	uid := jsonData["Id"].(string)
+	delete(jsonData, "Id")
+	o := model.DatabaseData{
+		Id:   uid,
+		Info: jsonData,
+	}
+	s.store.Insert(&o)
+	return &o, o.Validate()
+}
+
 func (s *server) ReadData(data string) *model.DatabaseData {
 	fmt.Println(data)
 	jsonData := make(map[string]interface{})
